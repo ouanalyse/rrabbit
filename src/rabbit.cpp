@@ -44,6 +44,7 @@
 
 #include <R.h>
 #include <Rinternals.h>
+#include <Rcpp.h>
 
 void die(const char *fmt, ...) {
 	fprintf(stderr,"%s\n", fmt);
@@ -95,12 +96,11 @@ void die_on_amqp_error(amqp_rpc_reply_t x, char const *context) {
 }
 
 // [[Rcpp::export]]
-void sendString() {
+void sendString(std::string body) {
 	char const *hostname;
 	int port, status;
 	char const *exchange;
 	char const *routingkey;
-	char const *messagebody;
 	amqp_socket_t *socket = NULL;
 	amqp_connection_state_t conn;
 
@@ -108,7 +108,6 @@ void sendString() {
 	port = 5672;
 	exchange = "amq.direct";
 	routingkey = "test";
-	messagebody = "-- test message --";
 
 	conn = amqp_new_connection();
 
@@ -139,7 +138,7 @@ void sendString() {
 			0,
 			0,
 			&props,
-			amqp_cstring_bytes(messagebody)),
+			amqp_cstring_bytes(body.c_str())),
 			"Publishing"
 		);
 	}
