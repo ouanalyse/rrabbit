@@ -1,0 +1,2 @@
+PKG_LIBS = -L/usr/local/lib -lrabbitmq
+CXX_STD = CXX11

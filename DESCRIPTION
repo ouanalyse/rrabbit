@@ -1,0 +1,12 @@
+Package: Rrabbit
+Type: Package
+Title: RabbitMQ client library
+Version: 0.0.1
+Date: 2016-11-07
+Author: Jakub Kužílek, Michal Bohuslávek
+Maintainer: Jakub Kužílek <jakub.kuzilek@gmail.com>
+Description: This package provides client functionality for RabbitMQ
+License: GPL (>= 2)
+Imports: Rcpp (>= 0.12.6)
+LinkingTo: Rcpp
+RoxygenNote: 5.0.1
