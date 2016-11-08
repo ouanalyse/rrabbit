@@ -114,13 +114,8 @@ Rcpp::XPtr<amqp_connection_state_t_> open_conn(std::string hostname, int port) {
 }
 
 // [[Rcpp::export]]
-void send_string(Rcpp::XPtr<amqp_connection_state_t_> conn, std::string body) {
+void send_string(Rcpp::XPtr<amqp_connection_state_t_> conn, std::string exchange, std::string key, std::string body) {
 	int st;
-	char const *exchange;
-	char const *routingkey;
-
-	exchange = "amq.direct";
-	routingkey = "test";
 
 	amqp_basic_properties_t props;
 	props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG | AMQP_BASIC_DELIVERY_MODE_FLAG;
@@ -130,8 +125,8 @@ void send_string(Rcpp::XPtr<amqp_connection_state_t_> conn, std::string body) {
 	st = amqp_basic_publish(
 		(amqp_connection_state_t) conn,
 		1,
-		amqp_cstring_bytes(exchange),
-		amqp_cstring_bytes(routingkey),
+		amqp_cstring_bytes(exchange.c_str()),
+		amqp_cstring_bytes(key.c_str()),
 		0,
 		0,
 		&props,
