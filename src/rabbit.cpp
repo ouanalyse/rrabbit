@@ -38,13 +38,13 @@
 #include <string.h>
 
 #include <stdint.h>
-#include <amqp_tcp_socket.h>
-#include <amqp.h>
-#include <amqp_framing.h>
+#include "Rrabbit_types.h"
 
 #include <R.h>
 #include <Rinternals.h>
 #include <Rcpp.h>
+
+using namespace Rcpp;
 
 void die(const char *fmt, ...) {
 	fprintf(stderr,"%s\n", fmt);
@@ -95,7 +95,8 @@ void die_on_amqp_error(amqp_rpc_reply_t x, char const *context) {
 	exit(1);
 }
 
-amqp_connection_state_t open_conn() {
+// [[Rcpp::export]]
+XPtr<amqp_connection_state_t_> open_conn() {
 	char const *hostname;
 	int port, status;
 	amqp_socket_t *socket = NULL;
@@ -120,18 +121,14 @@ amqp_connection_state_t open_conn() {
 	amqp_channel_open(conn, 1);
 	die_on_amqp_error(amqp_get_rpc_reply(conn), "Opening channel");
 
-	return conn;
+	return XPtr<amqp_connection_state_t_>((amqp_connection_state_t_*) conn, true);
 }
 
-void close_conn(amqp_connection_state_t conn);
-
 // [[Rcpp::export]]
-void sendString(std::string body) {
-	amqp_connection_state_t conn;
+void send_string(XPtr<amqp_connection_state_t_> conn, std::string body) {
 	char const *exchange;
 	char const *routingkey;
 
-	conn = open_conn();
 	exchange = "amq.direct";
 	routingkey = "test";
 
@@ -142,7 +139,7 @@ void sendString(std::string body) {
 
 	die_on_error(
 		amqp_basic_publish(
-			conn,
+			(amqp_connection_state_t) conn,
 			1,
 			amqp_cstring_bytes(exchange),
 			amqp_cstring_bytes(routingkey),
@@ -153,12 +150,11 @@ void sendString(std::string body) {
 		),
 		"Publishing"
 	);
-
-	close_conn(conn);
 }
 
-void close_conn(amqp_connection_state_t conn) {
-	die_on_amqp_error(amqp_channel_close(conn, 1, AMQP_REPLY_SUCCESS), "Closing channel");
-	die_on_amqp_error(amqp_connection_close(conn, AMQP_REPLY_SUCCESS), "Closing connection");
-	die_on_error(amqp_destroy_connection(conn), "Ending connection");
+// [[Rcpp::export]]
+void close_conn(XPtr<amqp_connection_state_t_> conn) {
+	die_on_amqp_error(amqp_channel_close((amqp_connection_state_t) conn, 1, AMQP_REPLY_SUCCESS), "Closing channel");
+	die_on_amqp_error(amqp_connection_close((amqp_connection_state_t) conn, AMQP_REPLY_SUCCESS), "Closing connection");
+	die_on_error(amqp_destroy_connection((amqp_connection_state_t) conn), "Ending connection");
 }
