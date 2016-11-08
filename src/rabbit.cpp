@@ -42,8 +42,6 @@
 #include <Rinternals.h>
 #include <Rcpp.h>
 
-using namespace Rcpp;
-
 void die(const char *fmt, ...) {
 	fprintf(stderr,"%s\n", fmt);
 	exit(1);
@@ -94,7 +92,7 @@ void die_on_amqp_error(amqp_rpc_reply_t x, char const *context) {
 }
 
 // [[Rcpp::export]]
-XPtr<amqp_connection_state_t_> open_conn(std::string hostname, int port) {
+Rcpp::XPtr<amqp_connection_state_t_> open_conn(std::string hostname, int port) {
 	int status;
 	amqp_socket_t *socket = NULL;
 	amqp_connection_state_t conn;
@@ -115,13 +113,13 @@ XPtr<amqp_connection_state_t_> open_conn(std::string hostname, int port) {
 	amqp_channel_open(conn, 1);
 	die_on_amqp_error(amqp_get_rpc_reply(conn), "Opening channel");
 
-	// Note that amqp_connection_state_t is really amqp_connection_state_t_*. As the XPtr
+	// Note that amqp_connection_state_t is really amqp_connection_state_t_*. As the Rcpp::XPtr
 	// template needs a pointer, cast (amqp_connection_state_t( to (amqp_connection_state_t_*).
-	return XPtr<amqp_connection_state_t_>((amqp_connection_state_t_*) conn, true);
+	return Rcpp::XPtr<amqp_connection_state_t_>((amqp_connection_state_t_*) conn, true);
 }
 
 // [[Rcpp::export]]
-void send_string(XPtr<amqp_connection_state_t_> conn, std::string body) {
+void send_string(Rcpp::XPtr<amqp_connection_state_t_> conn, std::string body) {
 	char const *exchange;
 	char const *routingkey;
 
@@ -149,7 +147,7 @@ void send_string(XPtr<amqp_connection_state_t_> conn, std::string body) {
 }
 
 // [[Rcpp::export]]
-void close_conn(XPtr<amqp_connection_state_t_> conn) {
+void close_conn(Rcpp::XPtr<amqp_connection_state_t_> conn) {
 	die_on_amqp_error(amqp_channel_close((amqp_connection_state_t) conn, 1, AMQP_REPLY_SUCCESS), "Closing channel");
 	die_on_amqp_error(amqp_connection_close((amqp_connection_state_t) conn, AMQP_REPLY_SUCCESS), "Closing connection");
 	die_on_error(amqp_destroy_connection((amqp_connection_state_t) conn), "Ending connection");
