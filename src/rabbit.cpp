@@ -115,6 +115,8 @@ XPtr<amqp_connection_state_t_> open_conn(std::string hostname, int port) {
 	amqp_channel_open(conn, 1);
 	die_on_amqp_error(amqp_get_rpc_reply(conn), "Opening channel");
 
+	// Note that amqp_connection_state_t is really amqp_connection_state_t_*. As the XPtr
+	// template needs a pointer, cast (amqp_connection_state_t( to (amqp_connection_state_t_*).
 	return XPtr<amqp_connection_state_t_>((amqp_connection_state_t_*) conn, true);
 }
 
