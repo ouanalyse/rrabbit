@@ -42,15 +42,9 @@
 #include <Rinternals.h>
 #include <Rcpp.h>
 
-void die(const char *fmt, ...) {
-	fprintf(stderr,"%s\n", fmt);
-	exit(1);
-}
-
 void die_on_error(int x, char const *context) {
 	if (x < 0) {
-		fprintf(stderr, "%s: %s\n", context, amqp_error_string2(x));
-		exit(1);
+		Rcpp::stop("%s: %s", context, amqp_error_string2(x));
 	}
 }
 
@@ -59,35 +53,36 @@ void die_on_amqp_error(amqp_rpc_reply_t x, char const *context) {
 	case AMQP_RESPONSE_NORMAL:
 		return;
 	case AMQP_RESPONSE_NONE:
-		fprintf(stderr, "%s: missing RPC reply type!\n", context);
+		Rcpp::stop("%s: missing RPC reply type!", context);
 		break;
 	case AMQP_RESPONSE_LIBRARY_EXCEPTION:
-		fprintf(stderr, "%s: %s\n", context, amqp_error_string2(x.library_error));
+		Rcpp::stop("%s: %s", context, amqp_error_string2(x.library_error));
 		break;
 	case AMQP_RESPONSE_SERVER_EXCEPTION:
 		switch (x.reply.id) {
 		case AMQP_CONNECTION_CLOSE_METHOD: {
 			amqp_connection_close_t *m = (amqp_connection_close_t *) x.reply.decoded;
-			fprintf(stderr, "%s: server connection error %uh, message: %.*s\n",
-			context,
-			m->reply_code,
-			(int) m->reply_text.len, (char *) m->reply_text.bytes);
+			Rcpp::stop("%s: server connection error %uh, message: %.*s",
+				context,
+				m->reply_code,
+				(int) m->reply_text.len, (char *) m->reply_text.bytes);
 			break;
 		}
 		case AMQP_CHANNEL_CLOSE_METHOD: {
 			amqp_channel_close_t *m = (amqp_channel_close_t *) x.reply.decoded;
-			fprintf(stderr, "%s: server channel error %uh, message: %.*s\n",
-			context,
-			m->reply_code,
-			(int) m->reply_text.len, (char *) m->reply_text.bytes);
+			Rcpp::stop("%s: server channel error %uh, message: %.*s",
+				context,
+				m->reply_code,
+				(int) m->reply_text.len, (char *) m->reply_text.bytes);
 			break;
 		}
 		default:
-			fprintf(stderr, "%s: unknown server error, method id 0x%08X\n", context, x.reply.id);
+			Rcpp::stop("%s: unknown server error, method id 0x%08X", context, x.reply.id);
 			break;
 		}
 		break;
 	}
+	fprintf(stderr, "rabbitmq-c: unknown error");
 	exit(1);
 }
 
@@ -101,17 +96,17 @@ Rcpp::XPtr<amqp_connection_state_t_> open_conn(std::string hostname, int port) {
 
 	socket = amqp_tcp_socket_new(conn);
 	if (!socket) {
-		die("creating TCP socket");
+		Rcpp::stop("failed to create a TCP socket");
 	}
 
 	status = amqp_socket_open(socket, hostname.c_str(), port);
 	if (status) {
-		die("opening TCP socket");
+		Rcpp::stop("failed to open a TCP socket");
 	}
 
-	die_on_amqp_error(amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, "guest", "guest"), "Logging in");
+	die_on_amqp_error(amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, "guest", "guest"), "logging in");
 	amqp_channel_open(conn, 1);
-	die_on_amqp_error(amqp_get_rpc_reply(conn), "Opening channel");
+	die_on_amqp_error(amqp_get_rpc_reply(conn), "opening channel");
 
 	// Note that amqp_connection_state_t is really amqp_connection_state_t_*. As the Rcpp::XPtr
 	// template needs a pointer, cast (amqp_connection_state_t( to (amqp_connection_state_t_*).
@@ -120,6 +115,7 @@ Rcpp::XPtr<amqp_connection_state_t_> open_conn(std::string hostname, int port) {
 
 // [[Rcpp::export]]
 void send_string(Rcpp::XPtr<amqp_connection_state_t_> conn, std::string body) {
+	int st;
 	char const *exchange;
 	char const *routingkey;
 
@@ -131,24 +127,22 @@ void send_string(Rcpp::XPtr<amqp_connection_state_t_> conn, std::string body) {
 	props.content_type = amqp_cstring_bytes("text/plain");
 	props.delivery_mode = 2; /* persistent delivery mode */
 
-	die_on_error(
-		amqp_basic_publish(
-			(amqp_connection_state_t) conn,
-			1,
-			amqp_cstring_bytes(exchange),
-			amqp_cstring_bytes(routingkey),
-			0,
-			0,
-			&props,
-			amqp_cstring_bytes(body.c_str())
-		),
-		"Publishing"
+	st = amqp_basic_publish(
+		(amqp_connection_state_t) conn,
+		1,
+		amqp_cstring_bytes(exchange),
+		amqp_cstring_bytes(routingkey),
+		0,
+		0,
+		&props,
+		amqp_cstring_bytes(body.c_str())
 	);
+	die_on_error(st, "publishing message");
 }
 
 // [[Rcpp::export]]
 void close_conn(Rcpp::XPtr<amqp_connection_state_t_> conn) {
-	die_on_amqp_error(amqp_channel_close((amqp_connection_state_t) conn, 1, AMQP_REPLY_SUCCESS), "Closing channel");
-	die_on_amqp_error(amqp_connection_close((amqp_connection_state_t) conn, AMQP_REPLY_SUCCESS), "Closing connection");
-	die_on_error(amqp_destroy_connection((amqp_connection_state_t) conn), "Ending connection");
+	die_on_amqp_error(amqp_channel_close((amqp_connection_state_t) conn, 1, AMQP_REPLY_SUCCESS), "closing channel");
+	die_on_amqp_error(amqp_connection_close((amqp_connection_state_t) conn, AMQP_REPLY_SUCCESS), "closing connection");
+	die_on_error(amqp_destroy_connection((amqp_connection_state_t) conn), "ending connection");
 }
