@@ -96,14 +96,10 @@ void die_on_amqp_error(amqp_rpc_reply_t x, char const *context) {
 }
 
 // [[Rcpp::export]]
-XPtr<amqp_connection_state_t_> open_conn() {
-	char const *hostname;
-	int port, status;
+XPtr<amqp_connection_state_t_> open_conn(std::string hostname, int port) {
+	int status;
 	amqp_socket_t *socket = NULL;
 	amqp_connection_state_t conn;
-
-	hostname = "localhost";
-	port = 5672;
 
 	conn = amqp_new_connection();
 
@@ -112,7 +108,7 @@ XPtr<amqp_connection_state_t_> open_conn() {
 		die("creating TCP socket");
 	}
 
-	status = amqp_socket_open(socket, hostname, port);
+	status = amqp_socket_open(socket, hostname.c_str(), port);
 	if (status) {
 		die("opening TCP socket");
 	}
