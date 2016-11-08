@@ -105,8 +105,6 @@ Rcpp::XPtr<amqp_connection_state_t_> open_conn(std::string hostname, int port) {
 	}
 
 	die_on_amqp_error(amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, "guest", "guest"), "logging in");
-	amqp_channel_open(conn, 1);
-	die_on_amqp_error(amqp_get_rpc_reply(conn), "opening channel");
 
 	// Note that amqp_connection_state_t is really amqp_connection_state_t_*. As the Rcpp::XPtr
 	// template needs a pointer, cast (amqp_connection_state_t( to (amqp_connection_state_t_*).
@@ -114,7 +112,13 @@ Rcpp::XPtr<amqp_connection_state_t_> open_conn(std::string hostname, int port) {
 }
 
 // [[Rcpp::export]]
-void send_string(Rcpp::XPtr<amqp_connection_state_t_> conn, std::string exchange, std::string key, std::string body) {
+void open_channel(Rcpp::XPtr<amqp_connection_state_t_> conn, int id) {
+	amqp_channel_open(conn, id);
+	die_on_amqp_error(amqp_get_rpc_reply(conn), "opening channel");
+}
+
+// [[Rcpp::export]]
+void send_string(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id, std::string exchange, std::string key, std::string body) {
 	int st;
 
 	amqp_basic_properties_t props;
@@ -124,7 +128,7 @@ void send_string(Rcpp::XPtr<amqp_connection_state_t_> conn, std::string exchange
 
 	st = amqp_basic_publish(
 		(amqp_connection_state_t) conn,
-		1,
+		chan_id,
 		amqp_cstring_bytes(exchange.c_str()),
 		amqp_cstring_bytes(key.c_str()),
 		0,
@@ -136,8 +140,12 @@ void send_string(Rcpp::XPtr<amqp_connection_state_t_> conn, std::string exchange
 }
 
 // [[Rcpp::export]]
+void close_channel(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id) {
+	die_on_amqp_error(amqp_channel_close((amqp_connection_state_t) conn, chan_id, AMQP_REPLY_SUCCESS), "closing channel");
+}
+
+// [[Rcpp::export]]
 void close_conn(Rcpp::XPtr<amqp_connection_state_t_> conn) {
-	die_on_amqp_error(amqp_channel_close((amqp_connection_state_t) conn, 1, AMQP_REPLY_SUCCESS), "closing channel");
 	die_on_amqp_error(amqp_connection_close((amqp_connection_state_t) conn, AMQP_REPLY_SUCCESS), "closing connection");
 	die_on_error(amqp_destroy_connection((amqp_connection_state_t) conn), "ending connection");
 }
