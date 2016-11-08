@@ -1,5 +1,4 @@
 /*
- * ***** BEGIN LICENSE BLOCK *****
  * Version: MIT
  *
  * Portions created by Alan Antonuk are Copyright (c) 2012-2013
@@ -30,7 +29,6 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- * ***** END LICENSE BLOCK *****
  */
 
 #include <stdlib.h>
