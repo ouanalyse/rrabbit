@@ -2,3 +2,4 @@ R/RcppExports.R
 src/RcppExports.cpp
 src/*.o
 src/*.so
+man/*
