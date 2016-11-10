@@ -55,12 +55,12 @@ RabbitChannel <- setClass("RabbitChannel",
 )
 
 #' @export
-setGeneric(name = "mqSendString",
-	def = function(chan, exchange, key, body) { standardGeneric("mqSendString") }
+setGeneric(name = "mqPublish",
+	def = function(chan, exchange, key, body) { standardGeneric("mqPublish") }
 )
 
-setMethod(f = "mqSendString", signature = "RabbitChannel", definition = function(chan, exchange, key, body) {
-	send_string(chan@connPtr, chan@id, exchange, key, body)
+setMethod(f = "mqPublish", signature = "RabbitChannel", definition = function(chan, exchange, key, body) {
+	publish_string(chan@connPtr, chan@id, exchange, key, body)
 	TRUE
 })
 

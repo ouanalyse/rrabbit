@@ -118,7 +118,7 @@ void open_channel(Rcpp::XPtr<amqp_connection_state_t_> conn, int id) {
 }
 
 // [[Rcpp::export]]
-void send_string(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id, std::string exchange, std::string key, std::string body) {
+void publish_string(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id, std::string exchange, std::string key, std::string body) {
 	int st;
 
 	amqp_basic_properties_t props;
