@@ -54,13 +54,19 @@ RabbitChannel <- setClass("RabbitChannel",
 	)
 )
 
+#' Persistent is TRUE or FALSE.
+#'
 #' @export
 setGeneric(name = "mqPublish",
-	def = function(chan, exchange, key, body) { standardGeneric("mqPublish") }
+	def = function(chan, exchange, key, body, persistent = FALSE) { standardGeneric("mqPublish") }
 )
 
-setMethod(f = "mqPublish", signature = "RabbitChannel", definition = function(chan, exchange, key, body) {
-	publish_string(chan@connPtr, chan@id, exchange, key, body)
+setMethod(f = "mqPublish", signature = "RabbitChannel", definition = function(chan, exchange, key, body, persistent) {
+	deliveryMode = 1
+	if (persistent) {
+		deliverMode = 2
+	}
+	publish_string(chan@connPtr, chan@id, exchange, key, body, deliveryMode)
 	TRUE
 })
 

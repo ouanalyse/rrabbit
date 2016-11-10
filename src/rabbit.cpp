@@ -118,13 +118,19 @@ void open_channel(Rcpp::XPtr<amqp_connection_state_t_> conn, int id) {
 }
 
 // [[Rcpp::export]]
-void publish_string(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id, std::string exchange, std::string key, std::string body) {
+void publish_string(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id,
+	std::string exchange, std::string key, std::string body,  int deliveryMode) {
+
+	// deliveryMode:
+	//   1 - non-persistent message
+	//   2 - persistent message
+
 	int st;
 
 	amqp_basic_properties_t props;
 	props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG | AMQP_BASIC_DELIVERY_MODE_FLAG;
 	props.content_type = amqp_cstring_bytes("text/plain");
-	props.delivery_mode = 2; /* persistent delivery mode */
+	props.delivery_mode = (amqp_delivery_mode_enum) deliveryMode;
 
 	st = amqp_basic_publish(
 		(amqp_connection_state_t) conn,
