@@ -112,9 +112,20 @@ Rcpp::XPtr<amqp_connection_state_t_> open_conn(std::string hostname, int port, s
 }
 
 // [[Rcpp::export]]
+void close_conn(Rcpp::XPtr<amqp_connection_state_t_> conn) {
+	die_on_amqp_error(amqp_connection_close((amqp_connection_state_t) conn, AMQP_REPLY_SUCCESS), "closing connection");
+	die_on_error(amqp_destroy_connection((amqp_connection_state_t) conn), "ending connection");
+}
+
+// [[Rcpp::export]]
 void open_channel(Rcpp::XPtr<amqp_connection_state_t_> conn, int id) {
 	amqp_channel_open(conn, id);
 	die_on_amqp_error(amqp_get_rpc_reply(conn), "opening channel");
+}
+
+// [[Rcpp::export]]
+void close_channel(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id) {
+	die_on_amqp_error(amqp_channel_close((amqp_connection_state_t) conn, chan_id, AMQP_REPLY_SUCCESS), "closing channel");
 }
 
 // [[Rcpp::export]]
@@ -143,15 +154,4 @@ void publish_string(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id,
 		amqp_cstring_bytes(body.c_str())
 	);
 	die_on_error(st, "publishing message");
-}
-
-// [[Rcpp::export]]
-void close_channel(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id) {
-	die_on_amqp_error(amqp_channel_close((amqp_connection_state_t) conn, chan_id, AMQP_REPLY_SUCCESS), "closing channel");
-}
-
-// [[Rcpp::export]]
-void close_conn(Rcpp::XPtr<amqp_connection_state_t_> conn) {
-	die_on_amqp_error(amqp_connection_close((amqp_connection_state_t) conn, AMQP_REPLY_SUCCESS), "closing connection");
-	die_on_error(amqp_destroy_connection((amqp_connection_state_t) conn), "ending connection");
 }
