@@ -87,7 +87,7 @@ void die_on_amqp_error(amqp_rpc_reply_t x, char const *context) {
 }
 
 // [[Rcpp::export]]
-Rcpp::XPtr<amqp_connection_state_t_> open_conn(std::string hostname, int port) {
+Rcpp::XPtr<amqp_connection_state_t_> open_conn(std::string hostname, int port, std::string username, std::string password) {
 	int status;
 	amqp_socket_t *socket = NULL;
 	amqp_connection_state_t conn;
@@ -104,7 +104,7 @@ Rcpp::XPtr<amqp_connection_state_t_> open_conn(std::string hostname, int port) {
 		Rcpp::stop("failed to open a TCP socket");
 	}
 
-	die_on_amqp_error(amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, "guest", "guest"), "logging in");
+	die_on_amqp_error(amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, username.c_str(), username.c_str()), "logging in");
 
 	// Note that amqp_connection_state_t is really amqp_connection_state_t_*. As the Rcpp::XPtr
 	// template needs a pointer, cast (amqp_connection_state_t( to (amqp_connection_state_t_*).

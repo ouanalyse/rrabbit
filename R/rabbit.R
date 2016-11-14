@@ -12,9 +12,9 @@ RabbitConnection <- setClass("RabbitConnection",
 #' Constructor mqDial
 #'
 #' @export
-mqDial <- function(hostname, port) {
+mqDial <- function(hostname, port, username = "guest", password = "guest") {
 	conn <- new("RabbitConnection",
-		ptr = open_conn(hostname, port)
+		ptr = open_conn(hostname, port, username, password)
 	)
 	return(conn)
 }
