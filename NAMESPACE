@@ -3,6 +3,7 @@
 export(mqCloseChan)
 export(mqCloseConn)
 export(mqDial)
+export(mqListenForever)
 export(mqOpenChan)
 export(mqPublish)
 exportClasses(RabbitChannel)

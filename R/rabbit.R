@@ -78,3 +78,13 @@ setMethod(f = "mqPublish", signature = "RabbitChannel", definition = function(ch
 	publish_string(chan@connPtr, chan@id, exchange, key, body, deliveryMode)
 	TRUE
 })
+
+#' @export
+setGeneric(name = "mqListenForever",
+	def = function(chan, queuename) { standardGeneric("mqListenForever") }
+)
+
+setMethod(f = "mqListenForever", signature = "RabbitChannel", definition = function(chan, queuename) {
+	listen_forever(chan@connPtr, chan@id, queuename)
+	TRUE
+})
