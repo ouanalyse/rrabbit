@@ -83,14 +83,14 @@ setMethod(f = "mqPublish", signature = "RabbitChannel", definition = function(ch
 
 #' @export
 setGeneric(name = "mqDeclareQueue",
-	def = function(chan, queuename, durable = FALSE, exclusive = FALSE, autoDelete = FALSE) { standardGeneric("mqDeclareQueue") }
+	def = function(chan, queuename = "", durable = FALSE, exclusive = FALSE, autoDelete = FALSE) { standardGeneric("mqDeclareQueue") }
 )
 
 setMethod(f = "mqDeclareQueue", signature = "RabbitChannel", definition = function(chan, queuename, durable, exclusive, autoDelete) {
-	declare_queue(chan@conn@ptr, chan@id, queuename, durable, exclusive, autoDelete)
+	name = declare_queue(chan@conn@ptr, chan@id, queuename, durable, exclusive, autoDelete)
 	q <- new("RabbitQueue",
 		chan = chan,
-		name = queuename
+		name = name
 	)
 	return(q)
 })
