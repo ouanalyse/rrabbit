@@ -130,7 +130,7 @@ void close_channel(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id) {
 
 // [[Rcpp::export]]
 void publish_string(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id,
-	std::string exchange, std::string key, std::string body,  int deliveryMode) {
+	std::string exchange, std::string key, std::string body, int deliveryMode, bool mandatory, bool immediate) {
 
 	// deliveryMode:
 	//   1 - non-persistent message
@@ -148,8 +148,8 @@ void publish_string(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id,
 		chan_id,
 		amqp_cstring_bytes(exchange.c_str()),
 		amqp_cstring_bytes(key.c_str()),
-		0,
-		0,
+		mandatory,
+		immediate,
 		&props,
 		amqp_cstring_bytes(body.c_str())
 	);
@@ -160,7 +160,7 @@ void publish_string(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id,
 void declare_queue(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id, std::string queuename, bool durable, bool exclusive, bool auto_delete) {
 	// Declaring a passive queue means that the queue must already exist. Useful for testing whether a particular
 	// queue was declared already. This is considered unnecessary for now.
-	amqp_queue_declare((amqp_connection_state_t) conn, chan_id, amqp_cstring_bytes(queuename.c_str()), 0 /* passive */, (int) durable, (int) exclusive, (int) auto_delete, amqp_empty_table);
+	amqp_queue_declare((amqp_connection_state_t) conn, chan_id, amqp_cstring_bytes(queuename.c_str()), 0 /* passive */, durable, exclusive, auto_delete, amqp_empty_table);
 	die_on_amqp_error(amqp_get_rpc_reply(conn), "declaring queue");
 }
 

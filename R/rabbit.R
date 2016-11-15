@@ -64,18 +64,20 @@ setMethod(f = "mqCloseChan", signature = "RabbitChannel", definition = function(
 })
 
 #' Persistent is TRUE or FALSE.
+#' Mandatory flag causes publishing to fail if there are no queues where the message can be routed.
+#' Immediate flag causes publishing to fail if there is zero ready consumers on the matching queue.
 #'
 #' @export
 setGeneric(name = "mqPublish",
-	def = function(chan, exchange, key, body, persistent = FALSE) { standardGeneric("mqPublish") }
+	def = function(chan, exchange, key, body, persistent = FALSE, mandatory = FALSE, immediate = FALSE) { standardGeneric("mqPublish") }
 )
 
-setMethod(f = "mqPublish", signature = "RabbitChannel", definition = function(chan, exchange, key, body, persistent) {
+setMethod(f = "mqPublish", signature = "RabbitChannel", definition = function(chan, exchange, key, body, persistent, mandatory, immediate) {
 	deliveryMode = 1
 	if (persistent) {
 		deliverMode = 2
 	}
-	publish_string(chan@conn@ptr, chan@id, exchange, key, body, deliveryMode)
+	publish_string(chan@conn@ptr, chan@id, exchange, key, body, deliveryMode, mandatory, immediate)
 	TRUE
 })
 
