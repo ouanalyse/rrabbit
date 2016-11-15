@@ -37,7 +37,7 @@ setGeneric(name = "mqOpenChan",
 setMethod(f = "mqOpenChan", signature = "RabbitConnection", definition = function(conn, id) {
 	open_channel(conn@ptr, id)
 	chan <- new("RabbitChannel",
-		connPtr = conn@ptr,
+		conn = conn,
 		id = id
 	)
 	return(chan)
@@ -48,7 +48,7 @@ setMethod(f = "mqOpenChan", signature = "RabbitConnection", definition = functio
 #' @export
 RabbitChannel <- setClass("RabbitChannel",
 	slots = c(
-		connPtr = "externalptr",
+		conn = "RabbitConnection",
 		id = "numeric"
 	)
 )
@@ -59,7 +59,7 @@ setGeneric(name = "mqCloseChan",
 )
 
 setMethod(f = "mqCloseChan", signature = "RabbitChannel", definition = function(chan) {
-	close_channel(chan@connPtr, chan@id)
+	close_channel(chan@conn@ptr, chan@id)
 	TRUE
 })
 
@@ -75,7 +75,7 @@ setMethod(f = "mqPublish", signature = "RabbitChannel", definition = function(ch
 	if (persistent) {
 		deliverMode = 2
 	}
-	publish_string(chan@connPtr, chan@id, exchange, key, body, deliveryMode)
+	publish_string(chan@conn@ptr, chan@id, exchange, key, body, deliveryMode)
 	TRUE
 })
 
@@ -85,6 +85,6 @@ setGeneric(name = "mqListenForever",
 )
 
 setMethod(f = "mqListenForever", signature = "RabbitChannel", definition = function(chan, queuename) {
-	listen_forever(chan@connPtr, chan@id, queuename)
+	listen_forever(chan@conn@ptr, chan@id, queuename)
 	TRUE
 })
