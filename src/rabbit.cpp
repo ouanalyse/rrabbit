@@ -86,87 +86,6 @@ void die_on_amqp_error(amqp_rpc_reply_t x, char const *context) {
 	exit(1);
 }
 
-static void dump_row(long count, int numinrow, int *chs) {
-	int i;
-
-	printf("%08lX:", count - numinrow);
-	if (numinrow > 0) {
-		for (i = 0; i < numinrow; i++) {
-			if (i == 8) {
-				printf(" :");
-			}
-			printf(" %02X", chs[i]);
-		}
-		for (i = numinrow; i < 16; i++) {
-			if (i == 8) {
-				printf(" :");
-			}
-			printf("   ");
-		}
-		printf("  ");
-		for (i = 0; i < numinrow; i++) {
-			if (isprint(chs[i])) {
-				printf("%c", chs[i]);
-			} else {
-				printf(".");
-			}
-		}
-	}
-	printf("\n");
-}
-
-static int rows_eq(int *a, int *b) {
-	int i;
-
-	for (i=0; i < 16; i++) {
-		if (a[i] != b[i]) {
-			return 0;
-		}
-	}
-	return 1;
-}
-
-void amqp_dump(void const *buffer, size_t len) {
-	unsigned char *buf = (unsigned char *) buffer;
-	long count = 0;
-	int numinrow = 0;
-	int chs[16];
-	int oldchs[16] = {0};
-	int showed_dots = 0;
-	size_t i;
-
-	for (i = 0; i < len; i++) {
-		int ch = buf[i];
-
-		if (numinrow == 16) {
-			int j;
-
-			if (rows_eq(oldchs, chs)) {
-				if (!showed_dots) {
-					showed_dots = 1;
-					printf("          .. .. .. .. .. .. .. .. : .. .. .. .. .. .. .. ..\n");
-				}
-			} else {
-				showed_dots = 0;
-				dump_row(count, numinrow, chs);
-			}
-
-			for (j = 0; j < 16; j++) {
-				oldchs[j] = chs[j];
-			}
-			numinrow = 0;
-		}
-
-		count++;
-		chs[numinrow++] = ch;
-	}
-
-	dump_row(count, numinrow, chs);
-	if (numinrow != 0) {
-		printf("%08lX:\n", count);
-	}
-}
-
 // [[Rcpp::export]]
 Rcpp::XPtr<amqp_connection_state_t_> open_conn(std::string hostname, int port, std::string username, std::string password) {
 	int status;
@@ -274,6 +193,7 @@ void consume_message(Rcpp::XPtr<amqp_connection_state_t_> conn) {
 					 (char *) envelope.message.properties.content_type.bytes);
 	}
 	printf("----\n");
-	amqp_dump(envelope.message.body.bytes, envelope.message.body.len);
+	std::string out ((char *) envelope.message.body.bytes, envelope.message.body.len);
+	std::cout << out << "\n";
 	amqp_destroy_envelope(&envelope);
 }
