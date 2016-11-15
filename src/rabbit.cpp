@@ -157,8 +157,10 @@ void publish_string(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id,
 }
 
 // [[Rcpp::export]]
-void declare_queue(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id, std::string queuename) {
-	amqp_queue_declare((amqp_connection_state_t) conn, chan_id, amqp_cstring_bytes(queuename.c_str()), 0, 0, 0, 1, amqp_empty_table);
+void declare_queue(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id, std::string queuename, bool durable, bool exclusive, bool auto_delete) {
+	// Declaring a passive queue means that the queue must already exist. Useful for testing whether a particular
+	// queue was declared already. This is considered unnecessary for now.
+	amqp_queue_declare((amqp_connection_state_t) conn, chan_id, amqp_cstring_bytes(queuename.c_str()), 0 /* passive */, (int) durable, (int) exclusive, (int) auto_delete, amqp_empty_table);
 	die_on_amqp_error(amqp_get_rpc_reply(conn), "declaring queue");
 }
 
