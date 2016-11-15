@@ -171,29 +171,17 @@ void start_consuming(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id, std
 // void cancel_consuming() -> amqp_basic_cancel
 
 // [[Rcpp::export]]
-void consume_message(Rcpp::XPtr<amqp_connection_state_t_> conn) {
+std::string consume_message(Rcpp::XPtr<amqp_connection_state_t_> conn) {
 	amqp_rpc_reply_t res;
 	amqp_envelope_t envelope;
 
 	amqp_maybe_release_buffers((amqp_connection_state_t) conn);
 	res = amqp_consume_message((amqp_connection_state_t) conn, &envelope, NULL, 0);
 	if (AMQP_RESPONSE_NORMAL != res.reply_type) {
-		// TODO: Signal somehow that the loop should end. Or just throw an error.
-		return;
+		Rcpp::stop("failed to consume a message");
 	}
 
-	printf("Delivery %u, exchange %.*s routingkey %.*s\n",
-				 (unsigned) envelope.delivery_tag,
-				 (int) envelope.exchange.len, (char *) envelope.exchange.bytes,
-				 (int) envelope.routing_key.len, (char *) envelope.routing_key.bytes);
-
-	if (envelope.message.properties._flags & AMQP_BASIC_CONTENT_TYPE_FLAG) {
-		printf("Content-type: %.*s\n",
-					 (int) envelope.message.properties.content_type.len,
-					 (char *) envelope.message.properties.content_type.bytes);
-	}
-	printf("----\n");
-	std::string out ((char *) envelope.message.body.bytes, envelope.message.body.len);
-	std::cout << out << "\n";
+	std::string msg ((char *) envelope.message.body.bytes, envelope.message.body.len);
 	amqp_destroy_envelope(&envelope);
+	return msg;
 }

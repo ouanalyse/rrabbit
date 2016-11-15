@@ -119,6 +119,5 @@ setGeneric(name = "mqConsumeMessage",
 )
 
 setMethod(f = "mqConsumeMessage", signature = "RabbitQueue", definition = function(queue) {
-	consume_message(queue@chan@conn@ptr)
-	TRUE
+	return(consume_message(queue@chan@conn@ptr))
 })
