@@ -81,6 +81,18 @@ setMethod(f = "mqPublish", signature = "RabbitChannel", definition = function(ch
 	TRUE
 })
 
+#' type can be: direct, topic, headers, or fanout
+#'
+#' @export
+setGeneric(name = "mqDeclareExchange",
+	def = function(chan, name, type) { standardGeneric("mqDeclareExchange") }
+)
+
+setMethod(f = "mqDeclareExchange", signature = "RabbitChannel", definition = function(chan, name, type) {
+	declare_exchange(chan@conn@ptr, chan@id, name, type)
+	TRUE
+})
+
 #' @export
 setGeneric(name = "mqDeclareQueue",
 	def = function(chan, queuename = "", durable = FALSE, exclusive = FALSE, autoDelete = FALSE) { standardGeneric("mqDeclareQueue") }
@@ -93,6 +105,15 @@ setMethod(f = "mqDeclareQueue", signature = "RabbitChannel", definition = functi
 		name = name
 	)
 	return(q)
+})
+
+#' @export
+setGeneric(name = "mqBindQueue",
+	def = function(chan, queue, exchange, bindkey) { standardGeneric("mqBindQueue") }
+)
+
+setMethod(f = "mqBindQueue", signature = "RabbitChannel", definition = function(chan, queue, exchange, bindkey) {
+	bind_queue(chan@conn@ptr, chan@id, queue, exchange, bindkey)
 })
 
 #' Class RabbitQueue
