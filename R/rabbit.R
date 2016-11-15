@@ -43,7 +43,7 @@ setMethod(f = "mqOpenChan", signature = "RabbitConnection", definition = functio
 	return(chan)
 })
 
-#' Class RabbitChan.
+#' Class RabbitChannel.
 #'
 #' @export
 RabbitChannel <- setClass("RabbitChannel",
@@ -80,11 +80,45 @@ setMethod(f = "mqPublish", signature = "RabbitChannel", definition = function(ch
 })
 
 #' @export
-setGeneric(name = "mqListenForever",
-	def = function(chan, queuename) { standardGeneric("mqListenForever") }
+setGeneric(name = "mqDeclareQueue",
+	def = function(chan, queuename) { standardGeneric("mqDeclareQueue") }
 )
 
-setMethod(f = "mqListenForever", signature = "RabbitChannel", definition = function(chan, queuename) {
-	listen_forever(chan@conn@ptr, chan@id, queuename)
+setMethod(f = "mqDeclareQueue", signature = "RabbitChannel", definition = function(chan, queuename) {
+	declare_queue(chan@conn@ptr, chan@id, queuename)
+	q <- new("RabbitQueue",
+		chan = chan,
+		name = queuename
+	)
+	return(q)
+})
+
+#' Class RabbitQueue
+#'
+#' @export
+RabbitQueue <- setClass("RabbitQueue",
+	slots = c(
+		chan = "RabbitChannel",
+		name = "character"
+	)
+)
+
+#' @export
+setGeneric(name = "mqStartConsuming",
+	def = function(queue) { standardGeneric("mqStartConsuming") }
+)
+
+setMethod(f = "mqStartConsuming", signature = "RabbitQueue", definition = function(queue) {
+	start_consuming(queue@chan@conn@ptr, queue@chan@id, queue@name)
+	TRUE
+})
+
+#' @export
+setGeneric(name = "mqConsumeMessage",
+	def = function(queue) { standardGeneric("mqConsumeMessage") }
+)
+
+setMethod(f = "mqConsumeMessage", signature = "RabbitQueue", definition = function(queue) {
+	consume_message(queue@chan@conn@ptr)
 	TRUE
 })

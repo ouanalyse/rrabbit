@@ -238,35 +238,42 @@ void publish_string(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id,
 }
 
 // [[Rcpp::export]]
-void listen_forever(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id, std::string queuename) {
-	amqp_queue_declare_ok_t *r = amqp_queue_declare((amqp_connection_state_t) conn, chan_id, amqp_cstring_bytes(queuename.c_str()), 0, 0, 0, 1, amqp_empty_table);
+void declare_queue(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id, std::string queuename) {
+	amqp_queue_declare((amqp_connection_state_t) conn, chan_id, amqp_cstring_bytes(queuename.c_str()), 0, 0, 0, 1, amqp_empty_table);
 	die_on_amqp_error(amqp_get_rpc_reply(conn), "declaring queue");
+}
 
+// [[Rcpp::export]]
+void start_consuming(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id, std::string queuename) {
 	amqp_basic_consume((amqp_connection_state_t) conn, chan_id, amqp_cstring_bytes(queuename.c_str()), amqp_empty_bytes, 0, 0, 0, amqp_empty_table);
 	die_on_amqp_error(amqp_get_rpc_reply((amqp_connection_state_t) conn), "consuming");
+}
 
-	for (;;) {
-		amqp_rpc_reply_t res;
-		amqp_envelope_t envelope;
+// void cancel_consuming() -> amqp_basic_cancel
 
-		amqp_maybe_release_buffers((amqp_connection_state_t) conn);
-		res = amqp_consume_message((amqp_connection_state_t) conn, &envelope, NULL, 0);
-		if (AMQP_RESPONSE_NORMAL != res.reply_type) {
-			break;
-		}
+// [[Rcpp::export]]
+void consume_message(Rcpp::XPtr<amqp_connection_state_t_> conn) {
+	amqp_rpc_reply_t res;
+	amqp_envelope_t envelope;
 
-		printf("Delivery %u, exchange %.*s routingkey %.*s\n",
-					 (unsigned) envelope.delivery_tag,
-					 (int) envelope.exchange.len, (char *) envelope.exchange.bytes,
-					 (int) envelope.routing_key.len, (char *) envelope.routing_key.bytes);
-
-		if (envelope.message.properties._flags & AMQP_BASIC_CONTENT_TYPE_FLAG) {
-			printf("Content-type: %.*s\n",
-						 (int) envelope.message.properties.content_type.len,
-						 (char *) envelope.message.properties.content_type.bytes);
-		}
-		printf("----\n");
-		amqp_dump(envelope.message.body.bytes, envelope.message.body.len);
-		amqp_destroy_envelope(&envelope);
+	amqp_maybe_release_buffers((amqp_connection_state_t) conn);
+	res = amqp_consume_message((amqp_connection_state_t) conn, &envelope, NULL, 0);
+	if (AMQP_RESPONSE_NORMAL != res.reply_type) {
+		// TODO: Signal somehow that the loop should end. Or just throw an error.
+		return;
 	}
+
+	printf("Delivery %u, exchange %.*s routingkey %.*s\n",
+				 (unsigned) envelope.delivery_tag,
+				 (int) envelope.exchange.len, (char *) envelope.exchange.bytes,
+				 (int) envelope.routing_key.len, (char *) envelope.routing_key.bytes);
+
+	if (envelope.message.properties._flags & AMQP_BASIC_CONTENT_TYPE_FLAG) {
+		printf("Content-type: %.*s\n",
+					 (int) envelope.message.properties.content_type.len,
+					 (char *) envelope.message.properties.content_type.bytes);
+	}
+	printf("----\n");
+	amqp_dump(envelope.message.body.bytes, envelope.message.body.len);
+	amqp_destroy_envelope(&envelope);
 }
