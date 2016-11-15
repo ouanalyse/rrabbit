@@ -85,11 +85,11 @@ setMethod(f = "mqPublish", signature = "RabbitChannel", definition = function(ch
 #'
 #' @export
 setGeneric(name = "mqDeclareExchange",
-	def = function(chan, name, type) { standardGeneric("mqDeclareExchange") }
+	def = function(chan, name, type, durable = FALSE, autoDelete = FALSE) { standardGeneric("mqDeclareExchange") }
 )
 
-setMethod(f = "mqDeclareExchange", signature = "RabbitChannel", definition = function(chan, name, type) {
-	declare_exchange(chan@conn@ptr, chan@id, name, type)
+setMethod(f = "mqDeclareExchange", signature = "RabbitChannel", definition = function(chan, name, type, durable, autoDelete) {
+	declare_exchange(chan@conn@ptr, chan@id, name, type, durable, autoDelete)
 	TRUE
 })
 

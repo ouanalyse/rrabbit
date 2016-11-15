@@ -157,9 +157,9 @@ void publish_string(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id,
 }
 
 // [[Rcpp::export]]
-void declare_exchange(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id, std::string name, std::string type) {
+void declare_exchange(Rcpp::XPtr<amqp_connection_state_t_> conn, int chan_id, std::string name, std::string type, bool durable, bool auto_delete) {
 	amqp_exchange_declare(/*(amqp_connection_state_t)*/ conn, chan_id, amqp_cstring_bytes(name.c_str()), amqp_cstring_bytes(type.c_str()),
-		0, 0, 0, 0, amqp_empty_table);
+		0 /* passive */, durable, auto_delete, 0 /* internal */, amqp_empty_table);
 	die_on_amqp_error(amqp_get_rpc_reply(conn), "declaring exchange");
 }
 
