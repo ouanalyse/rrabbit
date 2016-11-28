@@ -39,7 +39,6 @@
 #include "Rrabbit_types.h"
 
 #include <R.h>
-#include <Rinternals.h>
 #include <Rcpp.h>
 
 void die_on_error(int x, char const *context) {
