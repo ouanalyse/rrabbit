@@ -8,6 +8,9 @@
 #include <R.h>
 #include <Rcpp.h>
 
+void die_on_error(int x, char const *context);
+void die_on_amqp_error(amqp_rpc_reply_t x, char const *context);
+
 // [[Rcpp::export]]
 Rcpp::XPtr<amqp_connection_state_t_> open_conn(std::string hostname, int port, std::string username, std::string password) {
 	int status;
